@@ -36,8 +36,11 @@ class Main {
         usernameLogin = input.question("Ten Dang Nhap: ")
         passwordLogin = input.question("Mat Khau: ")
         if (usernameLogin == 'admin' && passwordLogin == 'admin') {
-            console.log("dang nhap thanh cong!")
+            console.log("dang nhap tai khoan admin thanh cong!")
             this.menuAdmin()
+        } else if (this.userManager.login(usernameLogin, passwordLogin)) {
+            console.log("dang nhap tai khoan khach hang thanh cong!")
+            this.menuUser()
         } else {
             console.log("nhap sai tai khoan hoac mat khau!")
         }
@@ -95,35 +98,117 @@ class Main {
 
     addUser() {
         console.log("----------Them Tai Khoan----------")
-        let usernameRegex = /^[a-z0-9_-]{5,15}$/;
-        let passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/
-        let username = input.question("nhap ten dang nhap moi: ");
-        let password = input.question("nhap mat khau moi: ");
+        let flag: boolean = false
+        do {
+            let username = input.question("Nhap tai khoan: ");
+            let usernameRegex = /^[a-z0-9_-]{5,15}$/;
+            let test = usernameRegex.test((username));
+            for (let i = 0; i < this.userManager.listUser.length; i++) {
+                if (this.userManager.listUser[i].username == username) {
+                    test = false
+                    console.log("Ten tai khoan da co nguoi dung");
+                }
+            }
+            let usernameDone: string;
+            let passwordDone: string;
+            if (test == false) {
+                console.log("Ten tai khoan khong hop le!")
+            } else {
+                usernameDone = username;
+                let flag2: boolean = false;
+                do {
+                    let password = input.question("Nhap mat khau: ");
+                    let passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/
+                    let test = passwordRegex.test(password)
+                    if (test == false) {
+                        console.log("Mat khau khong hop le!")
+                    } else {
+                        passwordDone = password
+                        let user = new User(username, password);
+                        this.userManager.add(user);
+                        console.log("Them tai khoan thanh cong!")
+                        flag2 = true
+                        flag = true
+                    }
+                } while (flag2 == false)
+            }
 
-        let user = new User(username, password);
-        this.userManager.add(user);
+        } while (flag == false)
     }
 
     showListUser() {
-        console.log("----------Danh sach tai khoan----------")
         this.userManager.findAll()
     }
 
     editUser() {
-        this.showListUser()
-        let id = +input.question("nhap so thu tu tai khoan muon sua: ")
-        let username = input.question("nhap ten dang nhap moi: ");
-        let password = input.question("nhap mat khau moi: ");
-        let user = new User(username, password);
-        this.userManager.edit(id, user)
-        console.log("Chinh sua tai khoan thanh cong!")
+        if (this.userManager.listUser.length == 0) {
+            console.log("Khong co tai khoan nguoi dung nao!")
+        } else {
+            this.showListUser()
+            let id = +input.question("nhap so thu tu tai khoan muon sua: ")
+            let check = false;
+            for (let i = 0; i < this.userManager.listUser.length; i++) {
+                if (id - 1 == i) {
+                    check = true;
+                }
+            }
+            if (check) {
+                console.log("----------Sua Tai Khoan----------")
+                let flag: boolean = true
+                do {
+                    let usernameEdit = input.question("Sua tai khoan: ");
+                    let usernameRegex = /^[a-z0-9_-]{5,15}$/;
+                    let test = usernameRegex.test((usernameEdit));
+                    for (let i = 0; i < this.userManager.listUser.length; i++) {
+                        if (this.userManager.listUser[i].username == usernameEdit) {
+                            test = false
+                            console.log("Ten tai khoan da co nguoi dung");
+                        }
+                    }
+                    let usernameDone: string;
+                    let passwordDone: string;
+                    if (test == false) {
+                        console.log("Ten tai khoan khong hop le!")
+                    } else {
+                        usernameDone = usernameEdit;
+                        let flag2: boolean = true;
+                        do {
+                            let passwordEdit = input.question("Sua mat khau: ");
+                            let passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/
+                            let test = passwordRegex.test(passwordEdit)
+                            if (test == false) {
+                                console.log("Mat khau khong hop le!")
+                            } else {
+                                passwordDone = passwordEdit
+                                let user = new User(usernameEdit, passwordEdit);
+                                this.userManager.edit(id,user);
+                                console.log("Chinh sua tai khoan thanh cong!")
+                                flag2 = false
+                                flag = false
+                            }
+                        } while (flag2 == true)
+                    }
+
+                } while (flag == true)
+            } else {
+                console.log("nhap sai so thu tu! Moi nhap lai")
+            }
+        }
     }
 
     removeUser() {
-        this.showListUser()
-        let id = +input.question("nhap so thu tu tai khoan muon xoa: ");
-        for (let i = 0; i < this.userManager.listUser.length; i++) {
-            if ((i + 1) == id) {
+        if (this.userManager.listUser.length == 0) {
+            console.log("Khong co tai khoan nguoi dung nao!")
+        } else {
+            this.showListUser()
+            let id = +input.question("nhap so thu tu tai khoan muon xoa: ");
+            let check = false;
+            for (let i = 0; i < this.userManager.listUser.length; i++) {
+                if (id - 1 == i) {
+                    check = true
+                }
+            }
+            if (check){
                 let menu = `----------Xoa tai khoan----------\n1.Co\n2.Khong\n0.Thoat`
                 let choice: number;
                 do {
@@ -140,8 +225,12 @@ class Main {
                         case 0:
                             this.menuUserManager()
                             break;
+                        default:
+                            console.log("khong co lua chon, moi nhap lai!")
                     }
                 } while (choice != 0)
+            }else {
+                console.log("nhap sai so thu tu! Moi nhap lai")
             }
         }
     }
@@ -323,7 +412,12 @@ class Main {
 
     totalBill() {
         let id = +input.question("nhap id may tinh tinh tien: ")
-        let totalService = this.orderDetailManager.findOrderById(id).totalMoneyOrder(id);
+        let totalService = 0;
+        if (this.orderDetailManager.findOrderById(id) == null){
+            totalService = 0;
+        }else {
+            totalService = this.orderDetailManager.findOrderById(id).totalMoneyOrder(id);
+        }
         let totalTimeNet = this.computerManager.totalTimeNet(id);
         console.log("Tong tien dich vu: " + totalService, "Tong tien thoi gian: " + totalTimeNet)
         let totalBill = totalService + totalTimeNet;
@@ -367,7 +461,6 @@ class Main {
         } else {
             console.log("khong ton tai id may!")
         }
-
     }
 
     menuRemoveComputer() {
@@ -554,18 +647,29 @@ class Main {
         } while (choice != 0)
     }
 
-    totalMoneyDay(){
+    totalMoneyDay() {
 
     }
 
-    totalMoneyMonth(){
+    totalMoneyMonth() {
 
     }
 
-    totalMoneyAll(){
+    totalMoneyAll() {
+
+    }
+
+    menuUser() {
+        console.log("- Chua lam duoc da luong hihi! -\n0.Dang xuat");
+        let choice: number;
+        choice = +input.question("nhap lua chon chua ban: ")
+        switch (choice) {
+            case 0:
+                this.mainMenu()
+        }
 
     }
 }
 
 let main = new Main()
-main.mainMenu()
+main.menuAdmin()
